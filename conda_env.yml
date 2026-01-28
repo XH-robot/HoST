@@ -1,4 +1,4 @@
-name: host
+name: fallrecovery
 channels:
   - defaults
 dependencies:
