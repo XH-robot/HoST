@@ -1,0 +1,32 @@
+#orca host sim2sim
+policy_name: model/转身起立/转身起立.pt
+#policy_name: 成功站立1.pt
+#policy_name: policy_1.pt
+xml_name: ths_23dof_noankle.xml
+simulation_duration: 200
+simulation_dt: 0.001
+control_decimation: 20
+
+# kps: [350,350,350,350,250,250, 350,350,350,350,250,250, 100, 500,500,500,500,100, 500,500,500,500,100]
+kps: [150,150,150,200,40,40, 150,150,150,200,40,40, 100, 100,100,100,100,100, 100,100,100,100,100]
+kds: [4,4,4,6,2,2,4,4,4,6,2,2, 4 , 4,4,4,4,4, 4,4,4,4,4]
+
+default_angles: [0.2,0,0,-0.4,-0.2,0, -0.2,0,0,0.4,0.2,0, 0, 0,1.4,0,0,0, 0,-1.4,0,0,0]
+
+ang_vel_scale: 0.25
+dof_pos_scale: 1
+dof_vel_scale: 0.05
+action_scale: 0.25
+
+
+num_actions: 23
+num_obs: 76
+
+
+policy_mode: host
+
+
+
+
+
+

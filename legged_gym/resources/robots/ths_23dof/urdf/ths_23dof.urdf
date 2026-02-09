@@ -101,10 +101,11 @@
     <axis
       xyz="0 -1 0" />
     <limit
-      lower="-2"
+      lower="-2.0"
       upper="2"
       effort="88"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 左腿横滚 -->
   <link
@@ -164,6 +165,7 @@
       upper="0.25"
       effort="88"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 左腿航向 -->
   <link
@@ -223,6 +225,7 @@
       upper="1.5"
       effort="88"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 左腿膝 -->
   <link
@@ -282,6 +285,7 @@
       upper="0.3"
       effort="140"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 左腿踝府仰 -->
   <link
@@ -341,6 +345,7 @@
       upper="0.7"
       effort="50"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 左腿踝横滚 -->
   <link
@@ -400,6 +405,7 @@
       upper="0.6"
       effort="50"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
 
 
@@ -462,6 +468,7 @@
       upper="2"
       effort="88"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 右腿横滚 -->
   <link
@@ -521,6 +528,7 @@
       upper="2"
       effort="88"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 右腿航向 -->
   <link
@@ -580,6 +588,7 @@
       upper="1.0"
       effort="88"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 右腿膝 -->
   <link
@@ -639,6 +648,7 @@
       upper="2.0"
       effort="140"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 右腿踝俯仰 -->
   <link
@@ -698,6 +708,7 @@
       upper="0.7"
       effort="50"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 右腿踝横滚 -->
   <link
@@ -757,6 +768,7 @@
       upper="0.6"
       effort="50"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
 
   <!-- ============================身体躯干============================== -->
@@ -817,6 +829,7 @@
       upper="1.0"
       effort="88"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
 
   <!-- ============================左手============================== -->
@@ -878,6 +891,7 @@
       upper="2.0"
       effort="25"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 左手肩横滚 -->
   <link
@@ -937,6 +951,7 @@
       upper="2"
       effort="25"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 左手肩航向 -->
   <link
@@ -996,6 +1011,7 @@
       upper="1.8"
       effort="25"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 左手肘 -->
   <link
@@ -1028,7 +1044,7 @@
           rgba="0.75294 0.75294 0.75294 1" />
       </material>
     </visual>
-    <collision>
+   <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -1055,6 +1071,7 @@
       upper="2.0"
       effort="25"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 左手腕横滚 -->
   <link
@@ -1114,6 +1131,7 @@
       upper="1.8"
       effort="25"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
 
   <!-- ================================右手================================-->
@@ -1175,6 +1193,7 @@
       upper="2.0"
       effort="25"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 右手肩横滚 -->
   <link
@@ -1234,6 +1253,7 @@
       upper="2"
       effort="25"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 右手肩航向 -->
   <link
@@ -1293,6 +1313,7 @@
       upper="1.8"
       effort="25"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 右手肘 -->
   <link
@@ -1352,6 +1373,7 @@
       upper="2.0"
       effort="25"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
   <!-- 右手腕横滚 -->
   <link
@@ -1411,6 +1433,7 @@
       upper="1.8"
       effort="25"
       velocity="10" />
+    <dynamics friction="0.0" damping="0.0"/>  <!-- 将关节摩擦和阻尼设为 0 -->
   </joint>
 
 

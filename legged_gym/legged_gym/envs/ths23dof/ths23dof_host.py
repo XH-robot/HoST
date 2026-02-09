@@ -301,6 +301,14 @@ class LeggedRobot_Ths(BaseTask):
         """
         self.up_axis_idx = 2 # 2 for z, 1 for y -> adapt gravity accordingly
         self.sim = self.gym.create_sim(self.sim_device_id, self.graphics_device_id, self.physics_engine, self.sim_params)
+        
+        sim_params = self.gym.get_sim_params(self.sim)
+        g = sim_params.gravity
+        g_vec = [g.x, g.y, g.z]
+        g_mag = (g.x**2 + g.y**2 + g.z**2) ** 0.5
+
+        print(f"Gravity vector = {g_vec}")
+        print(f"Gravity magnitude = {g_mag}")
         mesh_type = self.cfg.terrain.mesh_type
         if mesh_type in ['heightfield', 'trimesh']:
             self.terrain = Terrain(self.cfg.terrain, self.num_envs)
@@ -518,7 +526,7 @@ class LeggedRobot_Ths(BaseTask):
 
     def update_force_curriculum(self, env_ids):
         if torch.mean(self.old_headheight[env_ids]) > self.cfg.curriculum.threshold_height:
-            self.force[env_ids] = (self.force[env_ids] - 20).clamp(0, np.inf)
+            self.force[env_ids] = (self.force[env_ids] - 40).clamp(0, np.inf)
             self.action_rescale[env_ids] = (self.action_rescale[env_ids] - 0.02).clamp(0.25, np.inf)
 
     def _get_noise_scale_vec(self, cfg):
@@ -787,6 +795,12 @@ class LeggedRobot_Ths(BaseTask):
             dof_props = self._process_dof_props(dof_props_asset, i)
             self.gym.set_actor_dof_properties(env_handle, actor_handle, dof_props)
             body_props = self.gym.get_actor_rigid_body_properties(env_handle, actor_handle)
+            body_names = self.gym.get_actor_rigid_body_names(env_handle, actor_handle)
+            total_mass = 0.0
+            # for j, (name, prop) in enumerate(zip(body_names, body_props)):
+            #     print(f"Rigid body {j}: name = {name}, mass = {prop.mass}")
+            #     total_mass += prop.mass
+            # print(f"Total mass of robot in env {i}: {total_mass} kg")
 
             if i == 0:
                 # self.default_com = copy.deepcopy(body_props[0].com)
@@ -1062,7 +1076,7 @@ class LeggedRobot_Ths(BaseTask):
         else:
             base_height = self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
             reward = tolerance(-self.projected_gravity[:, 2], [self.cfg.rewards.orientation_threshold, np.inf], 1., 0.05) #-1 
-        return reward
+        return reward*base_height
 
     def _reward_head_height(self):
         if not self.is_gaussian:
@@ -1072,12 +1086,15 @@ class LeggedRobot_Ths(BaseTask):
             head_height = self.rigid_body_states[:, self.head_indices, 2].clone()
             feet_height = self.rigid_body_states[:, self.feet_indices, 2].clone().mean(-1).unsqueeze(-1)
             head_height -= feet_height
+            base_height = self.root_states[:, 2].unsqueeze(-1)
             reward = tolerance(head_height, (self.cfg.rewards.target_head_height, np.inf), self.cfg.rewards.target_head_margin, 0.1)
+            reward2 = tolerance(base_height, (self.cfg.rewards.target_base_height_phase1, np.inf), self.cfg.rewards.target_base_height_phase1, 0.1)
             delta_max_headheight = head_height - self.max_headheight
             delta_headheight = head_height - self.old_headheight
             self.max_headheight = torch.max(torch.cat((head_height, self.old_headheight), dim=1), dim=1)[0].unsqueeze(-1)
             self.old_headheight = head_height
-            return reward
+            base_height_engough = base_height > self.cfg.rewards.target_base_height_phase1
+            return reward2 + base_height_engough *reward
 
 
     #-----------------------------regularization rewards-----------------------------
@@ -1126,15 +1143,17 @@ class LeggedRobot_Ths(BaseTask):
     #-----------------------------style rewards-----------------------------
     def _reward_waist_deviation(self):
         wrist_dof = self.dof_pos[:, self.waist_joint_indices]
-        reward = (torch.abs(wrist_dof) > 1).float()
+        reward = (torch.abs(wrist_dof) > 0.3).float()
         return reward.squeeze(1)
 
     def _reward_hip_yaw_deviation(self):
-        reward = (torch.max(torch.abs(self.dof_pos[:, self.hip_yaw_joint_indices]), dim=-1)[0] > 1.4) | (torch.min(torch.abs(self.dof_pos[:, self.hip_yaw_joint_indices]), dim=-1)[0] > 0.9)
+        reward = (torch.max(torch.abs(self.dof_pos[:, self.hip_yaw_joint_indices]), dim=-1)[0] > 0.5) | (torch.min(torch.abs(self.dof_pos[:, self.hip_yaw_joint_indices]), dim=-1)[0] > 0.3)
+        # reward = (self.dof_pos[:, self.hip_yaw_joint_indices[0]] > 1.4) | (self.dof_pos[:, self.hip_yaw_joint_indices[1]] < -1.4)
         return reward
 
     def _reward_hip_roll_deviation(self):
-        reward = (torch.max(torch.abs(self.dof_pos[:, self.hip_roll_joint_indices]), dim=-1)[0] >  1.4) | (torch.min(torch.abs(self.dof_pos[:, self.hip_roll_joint_indices]), dim=-1)[0] > 0.9)
+        reward = (torch.max(torch.abs(self.dof_pos[:, self.hip_roll_joint_indices]), dim=-1)[0] > 0.5) | (torch.min(torch.abs(self.dof_pos[:, self.hip_roll_joint_indices]), dim=-1)[0] > 0.3)
+        # reward = (self.dof_pos[:, self.hip_roll_joint_indices[0]] >  0.1) | (self.dof_pos[:, self.hip_roll_joint_indices[1]] < -0.1)
         return reward
     
     def _reward_shoulder_roll_deviation(self):
@@ -1168,18 +1187,11 @@ class LeggedRobot_Ths(BaseTask):
         return reward * standup
 
     def _reward_knee_deviation(self):
-        base_height1 = self.root_states[:, 2] < 0.3
-        base_height2 = self.root_states[:, 2] > 0.3
+
         reward1 = (torch.max(self.dof_pos[:, self.left_knee_joint_indices], dim=-1)[0] > -0.1)
         reward2 = (torch.min(self.dof_pos[:, self.right_knee_joint_indices], dim=-1)[0] < 0.1)
-        reward3 = (torch.max(self.dof_pos[:, self.left_knee_joint_indices], dim=-1)[0] > 0)
-        reward4 = (torch.min(self.dof_pos[:, self.right_knee_joint_indices], dim=-1)[0] < 0)
         reward1 = reward1 | reward2
-        reward2 = reward3 | reward4
-
-        #reward = (torch.max(self.dof_pos[:, self.knee_joint_indices], dim=-1)[0] > 0)|(torch.min(self.dof_pos[:, self.knee_joint_indices], dim=-1)[0] < -2)
-        reward = reward1 * base_height1 + reward2 * base_height2
-        return reward
+        return reward1
 
     def _reward_shank_orientation(self):
         left_knee_pos = self.rigid_body_states[:, self.left_knee_indices, :3].clone()
@@ -1192,13 +1204,10 @@ class LeggedRobot_Ths(BaseTask):
 
         feet_orientation = torch.mean(torch.concat([left_feet_orientation, right_feet_orientation], dim=-1), dim=-1)
 
-        # base_height = self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
-        # reward = tolerance(feet_orientation, [0.8, np.inf], 1, 0.1) * base_height#.unsqueeze(1) 
+        
         reward = tolerance(feet_orientation, [0.8, np.inf], 1, 0.1) 
-        if self.cfg.constraints.post_task:
-            standup  = self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase3
-            reward = reward * ~standup + torch.ones_like(reward) * standup
-        return reward 
+        standup =self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
+        return reward * standup
 
     def _reward_ground_parallel(self):
         
@@ -1209,12 +1218,12 @@ class LeggedRobot_Ths(BaseTask):
 
         left_reward = -left_gravity[:, 2]+1
         right_reward = -right_gravity[:, 2]+1
-
+        standup =self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
 
         left_reward = torch.clamp(left_reward, 0.0, 2.0)
         right_reward = torch.clamp(right_reward, 0.0, 2.0)
 
-        return (left_reward + right_reward)/4
+        return (left_reward + right_reward)/4 * standup 
 
     def _reward_feet_distance(self):
         left_foot_pos = self.rigid_body_states[:, self.left_foot_indices, :3].clone()
@@ -1234,11 +1243,11 @@ class LeggedRobot_Ths(BaseTask):
         left_body_action = self.actions[:, self.left_leg_joints_indices] # [num_envs, 6]
         right_body_action = self.actions[:, self.right_leg_joints_indices] # [num_envs, 6]
         # negative_indices = torch.tensor([1, 2, 5, 16, 17], device=self.device, dtype=torch.int64)
-        negative_indices = torch.tensor([1, 2, 5], device=self.device, dtype=torch.int64)
+        negative_indices = torch.tensor([0,1,2,3,4,5], device=self.device, dtype=torch.int64)
         left_body_action[:, negative_indices] *= -1
         body_symmetry = torch.norm(left_body_action - right_body_action, dim=-1)
-        standup =self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase3
-        body_symmetry[~standup] *= 0
+        standup =self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
+        body_symmetry[standup] *= 0
         body_symmetry = body_symmetry * torch.clamp(-self.projected_gravity[:, 2], 0, 0.9) / 0.9
 
         return body_symmetry
@@ -1246,15 +1255,15 @@ class LeggedRobot_Ths(BaseTask):
         left_body = self.dof_pos[:, self.left_leg_joints_indices] # [num_envs, 6]
         right_body = self.dof_pos[:, self.right_leg_joints_indices] # [num_envs, 6]
         # negative_indices = torch.tensor([1, 2, 5, 16, 17], device=self.device, dtype=torch.int64)
-        negative_indices = torch.tensor([1, 2, 5], device=self.device, dtype=torch.int64)
+        negative_indices = torch.tensor([0,1,2,3,4,5], device=self.device, dtype=torch.int64)
         left_body[:, negative_indices] *= -1
         error=(torch.abs(left_body-right_body)-0.08).clip(min=0)
         body_symmetry = torch.norm(error, dim=-1)
-        standup =self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase3
-        body_symmetry[~standup] *= 0
+        standup =self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
+        body_symmetry[standup] *= 0
         reward = torch.exp(-body_symmetry/0.025)
 
-        reward[~standup] *= 0
+        reward[standup] *= 0
         reward = reward * torch.clamp(-self.projected_gravity[:, 2], 0, 0.9) / 0.9
 
         return reward
@@ -1313,9 +1322,16 @@ class LeggedRobot_Ths(BaseTask):
         reward = reward * base_height
         return reward
     
-    # def _reward_target_knee_angle(self):
-    #     knee_angles = self.dof_pos[:, self.knee_joint_indices]
-    #     reward = torch.all(knee_angles > 0, dim=1).float()
-    #     standup = self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase3
-    #     return reward * standup
+    def _reward_target_hip_roll_deviation(self):
+        reward = (self.dof_pos[:, self.hip_roll_joint_indices[0]] >  0) | (self.dof_pos[:, self.hip_roll_joint_indices[1]] < 0)
+        standup =self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase3
+        return reward * standup
+    
+    def _reward_target_knee_angle(self):
+        knee_angles = self.dof_pos[:, self.knee_joint_indices]
+        reward1 = (torch.max(self.dof_pos[:, self.left_knee_joint_indices], dim=-1)[0] > -0.1)
+        reward2 = (torch.min(self.dof_pos[:, self.right_knee_joint_indices], dim=-1)[0] < 0.1)
+        reward1 = reward1 | reward2
+        standup = self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase3
+        return reward1 * standup
         

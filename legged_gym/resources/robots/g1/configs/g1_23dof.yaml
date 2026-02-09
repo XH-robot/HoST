@@ -1,0 +1,31 @@
+#orca host sim2sim
+
+policy_name: ground_Jan22_07-22-54_test_noKnee_feetparallel1_1520_0.25_v0.onnx
+xml_name: scene_23dof.xml
+simulation_duration: 200
+simulation_dt: 0.001
+control_decimation: 20
+
+
+kps: [150,150,150,200,40,40, 150,150,150,200,40,40, 100,100,100, 100,100,100,100, 100,100,100,100]
+kds: [4,4,4,6,2,2,4,4,4,6,2,2, 4,4,4, 4,4,4,4, 4,4,4,4]
+
+default_angles: [-0.1,0,0,0.3,-0.2,0, -0.1,0,0,0.3,-0.2,0, 0,0,0, 0,0,0,0.8, 0,0,0,0.8]
+
+ang_vel_scale: 0.25
+dof_pos_scale: 1
+dof_vel_scale: 0.05
+action_scale: 0.25
+
+
+num_actions: 23
+num_obs: 76
+
+
+policy_mode: host
+
+
+
+
+
+

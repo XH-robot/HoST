@@ -3,8 +3,8 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class ThsCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.3] # x,y,z [m], updated to match Piwaist
-        rot = [0.0, -1, 0, 1.0] # x,y,z,w [quat]
+        pos = [0.0, 0.0, 0.5] # x,y,z [m], updated to match Piwaist
+        rot = [0.0, 1, 0, 1.0] # x,y,z,w [quat]
         target_joint_angles = { # = target angles [rad] when action = 0.0
             'left_hip_pitch_joint' : 0.2,  
             'left_hip_roll_joint' : 0,                 
@@ -96,7 +96,7 @@ class ThsCfg( LeggedRobotCfg ):
             'wrist': 4, 
         }  # [N*m/rad]  # [N*m*s/rad]
         # action scale: target angle = actionRescale * action + cur_dof_pos
-        action_scale = 1#0.25#1
+        action_scale = 1 #0.25#1
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
 
@@ -119,20 +119,21 @@ class ThsCfg( LeggedRobotCfg ):
         terrain_length = 8.
         terrain_width = 8.
         num_rows = 1 # number of terrain rows (levels)
-        num_cols = 20 # number of terrain cols (types)
+        num_cols = 20 # number of terrain colstrash:///ths_23dof.2/urdf/ths_23dof.urdf (types)
         terrain_proportions = [1, 0., 0, 0, 0]
         # trimesh only:
         slope_treshold = 0.75 # slopes above this threshold will be corrected to vertical surfaces
 
     class asset( LeggedRobotCfg.asset ):
         file = "{LEGGED_GYM_ROOT_DIR}/resources/robots/ths_23dof/urdf/ths_23dof.urdf"
+        # file = "{LEGGED_GYM_ROOT_DIR}/resources/robots/ths_23dof/ths_23dof(old).urdf"
         name = "Ths23dof"
         left_foot_name = "left_ankle_pitch"
         right_foot_name = "right_ankle_pitch"
         left_knee_name = 'left_knee_link'
         right_knee_name = 'right_knee_link'
         foot_name = "ankle_roll_link"
-        penalize_contacts_on = ["elbow", 'shoulder', 'base', 'knee', 'hip']
+        penalize_contacts_on = ['shoulder', 'base']
         terminate_after_contacts_on = []    #'torse'
 
         left_shoulder_name = "left_shoulder"
@@ -191,14 +192,14 @@ class ThsCfg( LeggedRobotCfg ):
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
         soft_dof_vel_limit = 0.9
-        base_height_target = 0.7  # updated to match Piwaist
+        base_height_target = 0.75  # updated to match Piwaist
         only_positive_rewards = False # if true negative total rewards are clipped at zero (avoids early termination problems)
         orientation_sigma = 1
         is_gaussian = True
-        target_head_height = 1.1  # updated to match Piwaist head_height_target (base_height + 0.08)
-        target_head_margin = 1.1
-        target_base_height_phase1 = 0.4  # updated to match Piwaist
-        target_base_height_phase2 = 0.4 #0.05 updated to 0.05 to get better standing style
+        target_head_height = 1  # updated to match Piwaist head_height_target (base_height + 0.08)
+        target_head_margin = 1
+        target_base_height_phase1 = 0.25  # updated to match Piwaist
+        target_base_height_phase2 = 0.45 #0.05 updated to 0.05 to get better standing style
         target_base_height_phase3 = 0.65  # updated to match Piwaist
         orientation_threshold = 0.99
         left_foot_displacement_sigma = -2#-200 updated to get better standing style
@@ -208,7 +209,7 @@ class ThsCfg( LeggedRobotCfg ):
 
         reward_groups = ['task', 'regu', 'style', 'target']
         num_reward_groups = len(reward_groups)
-        reward_group_weights = [2.5, 0.1, 1.5, 2]
+        reward_group_weights = [2.5, 0.1, 1, 1]
 
         class scales:
             task_orientation = 1
@@ -230,7 +231,7 @@ class ThsCfg( LeggedRobotCfg ):
         class scales:
             # regularization reward
             regu_dof_acc = -2.5e-7
-            regu_action_rate = -0.01
+            regu_action_rate = -0.03
             regu_smoothness = -0.01 
             regu_torques = -2.5e-6
             regu_joint_power = -2.5e-5
@@ -240,10 +241,10 @@ class ThsCfg( LeggedRobotCfg ):
             regu_dof_vel_limits = -1 
 
             # style reward
-            style_waist_deviation = 0
-            style_hip_yaw_deviation = 0
-            style_hip_roll_deviation = 0
-            style_shoulder_roll_deviation = 0
+            style_waist_deviation = -10
+            style_hip_yaw_deviation = -10
+            style_hip_roll_deviation = -10
+            style_shoulder_roll_deviation = -2.5
             style_left_foot_displacement = 2.5 #7.5 updated to get better standing style
             style_right_foot_displacement = 2.5 #7.5  updated to get better standing style
             style_knee_deviation = -10
@@ -255,14 +256,15 @@ class ThsCfg( LeggedRobotCfg ):
             style_soft_symmetry_body=2.5 # updated to get better standing style
 
             # post-task reward
-            target_ang_vel_xy = 10
-            target_lin_vel_xy = 10
+            target_ang_vel_xy = 50
+            target_lin_vel_xy = 15
             target_feet_height_var = 2.5
             target_target_lower_dof_pos = 20  #  updated to get better standing style
+            target_target_upper_dof_pos = 10
             target_target_orientation = 10
             target_target_base_height = 10
-            target_hip_roll_deviation = 10
-            # target_target_knee_angle = 10 #  updated to get better standing style
+            target_hip_roll_deviation = -20
+            target_target_knee_angle = 10 #  updated to get better standing style
 
     class domain_rand:
         use_random = True
@@ -274,7 +276,7 @@ class ThsCfg( LeggedRobotCfg ):
         motor_strength_range = [0.9, 1.1]
 
         randomize_payload_mass = use_random
-        payload_mass_range = [-2, 3]
+        payload_mass_range = [-2, 5]
 
         randomize_com_displacement = use_random
         com_displacement_range = [-0.03, 0.03]
@@ -296,10 +298,10 @@ class ThsCfg( LeggedRobotCfg ):
         
         randomize_initial_joint_pos = True
         initial_joint_pos_scale = [0.9, 1.1]
-        initial_joint_pos_offset = [-0.1, 0.1]
+        initial_joint_pos_offset = [-0.15, 0.15]
         
-        push_robots = True 
-        push_interval_s = 10
+        push_robots = True
+        push_interval_s = 5
         max_push_vel_xy = 0.5
 
         delay = use_random
@@ -310,7 +312,7 @@ class ThsCfg( LeggedRobotCfg ):
         force = 200 # 100*2=200 is the actuatl force because of a extra keyframe torso link
         dof_vel_limit = 300
         base_vel_limit = 20
-        threshold_height = 1.0
+        threshold_height = 0.95
         no_orientation = False
 
     class sim:
