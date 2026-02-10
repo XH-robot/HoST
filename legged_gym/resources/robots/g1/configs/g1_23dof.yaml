@@ -1,6 +1,6 @@
 #orca host sim2sim
 
-policy_name: ground_Jan22_07-22-54_test_noKnee_feetparallel1_1520_0.25_v0.onnx
+policy_name: policy_1.pt
 xml_name: scene_23dof.xml
 simulation_duration: 200
 simulation_dt: 0.001

@@ -32,6 +32,10 @@ from legged_gym.envs.ths23dof.ths23dof_config import ThsCfg as ThsCfgGround
 from legged_gym.envs.ths23dof.ths23dof_config import ThsCfgPPO as ThsCfgPPOGround
 from legged_gym.envs.ths23dof.ths23dof_host import LeggedRobot_Ths
 
+from legged_gym.envs.ths23dof.ths23dof_config_faceup import ThsCfg as ThsCfgGround_faceup
+from legged_gym.envs.ths23dof.ths23dof_config_faceup import ThsCfgPPO as ThsCfgPPOGround_faceup
+from legged_gym.envs.ths23dof.ths23dof_host_faceup import LeggedRobot_Ths as LeggedRobot_Ths_faceup
+
 task_registry.register( "g1_ground", LeggedRobotGround, G1CfgGround(), G1CfgPPOGround())
 task_registry.register( "g1_platform", LeggedRobotPlatform, G1CfgPlatform(), G1CfgPPOPlatform())
 task_registry.register( "g1_wall", LeggedRobotWall, G1WallCfgWall(), G1WallCfgPPOWall())
@@ -42,3 +46,4 @@ task_registry.register( "h1_ground", LeggedRobotGround, H1CfgGround(), H1CfgPPOG
 task_registry.register( "pi_ground", LeggedRobot_Pi, PiCfgGround(), PiCfgPPOGround())
 
 task_registry.register( "ths_ground", LeggedRobot_Ths, ThsCfgGround(), ThsCfgPPOGround())
+task_registry.register( "ths_ground_faceup", LeggedRobot_Ths_faceup, ThsCfgGround_faceup(), ThsCfgPPOGround_faceup())

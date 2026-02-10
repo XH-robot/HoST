@@ -1096,15 +1096,12 @@ class LeggedRobot_Ths(BaseTask):
             head_height = self.rigid_body_states[:, self.head_indices, 2].clone()
             feet_height = self.rigid_body_states[:, self.feet_indices, 2].clone().mean(-1).unsqueeze(-1)
             head_height -= feet_height
-            base_height = self.root_states[:, 2].unsqueeze(-1)
             reward = tolerance(head_height, (self.cfg.rewards.target_head_height, np.inf), self.cfg.rewards.target_head_margin, 0.1)
-            reward2 = tolerance(base_height, (self.cfg.rewards.target_base_height_phase1, np.inf), self.cfg.rewards.target_base_height_phase1, 0.1)
             delta_max_headheight = head_height - self.max_headheight
             delta_headheight = head_height - self.old_headheight
             self.max_headheight = torch.max(torch.cat((head_height, self.old_headheight), dim=1), dim=1)[0].unsqueeze(-1)
             self.old_headheight = head_height
-            base_height_engough = base_height > self.cfg.rewards.target_base_height_phase1
-            return reward2 + base_height_engough *reward
+            return reward
 
 
     #-----------------------------regularization rewards-----------------------------
@@ -1153,16 +1150,16 @@ class LeggedRobot_Ths(BaseTask):
     #-----------------------------style rewards-----------------------------
     def _reward_waist_deviation(self):
         wrist_dof = self.dof_pos[:, self.waist_joint_indices]
-        reward = (torch.abs(wrist_dof) > 0.1).float()
+        reward = (torch.abs(wrist_dof) > 0.3).float()
         return reward.squeeze(1)
 
     def _reward_hip_yaw_deviation(self):
-        reward = (torch.max(torch.abs(self.dof_pos[:, self.hip_yaw_joint_indices]), dim=-1)[0] > 0.3) | (torch.min(torch.abs(self.dof_pos[:, self.hip_yaw_joint_indices]), dim=-1)[0] > 0.1)
+        reward = (torch.max(torch.abs(self.dof_pos[:, self.hip_yaw_joint_indices]), dim=-1)[0] > 0.5) | (torch.min(torch.abs(self.dof_pos[:, self.hip_yaw_joint_indices]), dim=-1)[0] > 0.3)
         # reward = (self.dof_pos[:, self.hip_yaw_joint_indices[0]] > 1.4) | (self.dof_pos[:, self.hip_yaw_joint_indices[1]] < -1.4)
         return reward
 
     def _reward_hip_roll_deviation(self):
-        reward = (torch.max(torch.abs(self.dof_pos[:, self.hip_roll_joint_indices]), dim=-1)[0] > 0.3) | (torch.min(torch.abs(self.dof_pos[:, self.hip_roll_joint_indices]), dim=-1)[0] > 0.1)
+        reward = (torch.max(torch.abs(self.dof_pos[:, self.hip_roll_joint_indices]), dim=-1)[0] > 0.5) | (torch.min(torch.abs(self.dof_pos[:, self.hip_roll_joint_indices]), dim=-1)[0] > 0.3)
         # reward = (self.dof_pos[:, self.hip_roll_joint_indices[0]] >  0.1) | (self.dof_pos[:, self.hip_roll_joint_indices[1]] < -0.1)
         return reward
     
@@ -1198,10 +1195,18 @@ class LeggedRobot_Ths(BaseTask):
 
     def _reward_knee_deviation(self):
 
-        reward1 = (torch.max(self.dof_pos[:, self.left_knee_joint_indices], dim=-1)[0] > -0.1)
-        reward2 = (torch.min(self.dof_pos[:, self.right_knee_joint_indices], dim=-1)[0] < 0.1)
+        base_height1 = self.root_states[:, 2] < 0.3
+        base_height2 = self.root_states[:, 2] > 0.3
+        reward1 = (torch.max(self.dof_pos[:, self.left_knee_indices], dim=-1)[0] > -0.1)
+        reward2 = (torch.min(self.dof_pos[:, self.right_knee_indices], dim=-1)[0] < 0.1)
+        reward3 = (torch.max(self.dof_pos[:, self.left_knee_indices], dim=-1)[0] > 0)
+        reward4 = (torch.min(self.dof_pos[:, self.right_knee_indices], dim=-1)[0] < 0)
         reward1 = reward1 | reward2
-        return reward1
+        reward2 = reward3 | reward4
+
+        #reward = (torch.max(self.dof_pos[:, self.knee_joint_indices], dim=-1)[0] > 0)|(torch.min(self.dof_pos[:, self.knee_joint_indices], dim=-1)[0] < -2)
+        reward = reward1 * base_height1 + reward2 * base_height2
+        return reward
 
     def _reward_shank_orientation(self):
         left_knee_pos = self.rigid_body_states[:, self.left_knee_indices, :3].clone()
@@ -1215,9 +1220,10 @@ class LeggedRobot_Ths(BaseTask):
         feet_orientation = torch.mean(torch.concat([left_feet_orientation, right_feet_orientation], dim=-1), dim=-1)
 
         
-        reward = tolerance(feet_orientation, [0.8, np.inf], 1, 0.1) 
-        standup =self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
-        return reward * standup
+        base_height = self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
+        reward = tolerance(feet_orientation, [0.8, np.inf], 1, 0.1) * base_height#.unsqueeze(1) 
+
+        return reward
 
     def _reward_ground_parallel(self):
         
@@ -1241,7 +1247,7 @@ class LeggedRobot_Ths(BaseTask):
         feet_distances = torch.norm(left_foot_pos - right_foot_pos, dim=-1)
         reward = tolerance(feet_distances, [0, 0.4], 0.3, 0.05)
         # return (feet_distances > 0.33).squeeze(1) #better standing style
-        return (feet_distances > 0.45).squeeze(1)
+        return (feet_distances > 0.9).squeeze(1)
 
 
     def _reward_style_ang_vel_xy(self):
@@ -1256,8 +1262,8 @@ class LeggedRobot_Ths(BaseTask):
         negative_indices = torch.tensor([0,1,2,3,4,5,6,7,8,9,10], device=self.device, dtype=torch.int64)
         left_body_action[:, negative_indices] *= -1
         body_symmetry = torch.norm(left_body_action - right_body_action, dim=-1)
-        standup =self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
-        body_symmetry[standup] *= 0
+
+
         body_symmetry = body_symmetry * torch.clamp(-self.projected_gravity[:, 2], 0, 0.9) / 0.9
 
         return body_symmetry
@@ -1269,11 +1275,7 @@ class LeggedRobot_Ths(BaseTask):
         left_body[:, negative_indices] *= -1
         error=(torch.abs(left_body-right_body)-0.08).clip(min=0)
         body_symmetry = torch.norm(error, dim=-1)
-        standup =self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
-        body_symmetry[standup] *= 0
         reward = torch.exp(-body_symmetry/0.025)
-
-        reward[standup] *= 0
         reward = reward * torch.clamp(-self.projected_gravity[:, 2], 0, 0.9) / 0.9
 
         return reward

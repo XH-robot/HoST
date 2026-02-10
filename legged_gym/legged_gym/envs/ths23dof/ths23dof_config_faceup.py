@@ -4,7 +4,7 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 class ThsCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.5] # x,y,z [m], updated to match Piwaist
-        rot = [0.0, 1, 0, 1.0] # x,y,z,w [quat]
+        rot = [0.0, 1, 0, -1.0] # x,y,z,w [quat]
         target_joint_angles = { # = target angles [rad] when action = 0.0
             'left_hip_pitch_joint' : 0.2,  
             'left_hip_roll_joint' : 0,                 
@@ -219,7 +219,7 @@ class ThsCfg( LeggedRobotCfg ):
     class constraints( LeggedRobotCfg.rewards ):
         is_gaussian = True
         target_head_height = 1.1
-        target_head_margin = 1.1
+        target_head_margin = 1
         orientation_height_threshold = 0.9
 
 
@@ -254,18 +254,18 @@ class ThsCfg( LeggedRobotCfg ):
             style_feet_distance = -10
             style_style_ang_vel_xy = 10
             style_soft_symmetry_action=-10  #  updated to get better standing style
-            style_soft_symmetry_body=10 # updated to get better standing style
+            style_soft_symmetry_body=2.5 # updated to get better standing style
 
             # post-task reward
-            target_ang_vel_xy = 50
-            target_lin_vel_xy = 15
+            target_ang_vel_xy = 10
+            target_lin_vel_xy = 10
             target_feet_height_var = 2.5
             target_target_lower_dof_pos = 20  #  updated to get better standing style
             target_target_upper_dof_pos = 10
             target_target_orientation = 10
             target_target_base_height = 10
-            target_hip_roll_deviation = -20
-            target_target_knee_angle = 10 #  updated to get better standing style
+            target_hip_roll_deviation = 0
+            target_target_knee_angle = 0 #  updated to get better standing style
 
     class domain_rand:
         use_random = True
@@ -314,7 +314,7 @@ class ThsCfg( LeggedRobotCfg ):
         dof_vel_limit = 300
         base_vel_limit = 20
         threshold_height = 0.95
-        no_orientation = False
+        no_orientation = True
 
     class sim:
         dt =  0.005

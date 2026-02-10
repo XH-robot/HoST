@@ -142,12 +142,12 @@ if __name__ == "__main__":
     d.qpos[:] = mujoco_default_dof_pos
     mujoco.mj_forward(m, d)
     # load policy
-    # policy = torch.jit.load(policy_path)
-    ort_session = ort.InferenceSession(policy_path)
-    input_name = ort_session.get_inputs()[0].name
-    output_name = ort_session.get_outputs()[0].name
-    print("ONNX model input name:", input_name)
-    print("ONNX model output name:", output_name)
+    policy = torch.jit.load(policy_path)
+    # ort_session = ort.InferenceSession(policy_path)
+    # input_name = ort_session.get_inputs()[0].name
+    # output_name = ort_session.get_outputs()[0].name
+    # print("ONNX model input name:", input_name)
+    # print("ONNX model output name:", output_name)
     if policy_mode =="unitree":
         obs_buf = np.zeros(num_obs, dtype=np.float32)
     elif  policy_mode == "host":
@@ -220,13 +220,13 @@ if __name__ == "__main__":
 
                     obs_buf = np.concatenate(( obs_buf[76:76*6],current_obs), axis=-1, dtype=np.float32)
 
-                obs_tensor = obs_buf.astype(np.float32)  # 确保是 float32，ONNX 通常要求这个
-                obs_tensor = np.expand_dims(obs_tensor, axis=0)  # 相当于 unsqueeze(0)
-                outputs = ort_session.run([output_name], {input_name: obs_tensor})
-                action = outputs[0].squeeze()
+                # obs_tensor = obs_buf.astype(np.float32)  # 确保是 float32，ONNX 通常要求这个
+                # obs_tensor = np.expand_dims(obs_tensor, axis=0)  # 相当于 unsqueeze(0)
+                # outputs = ort_session.run([output_name], {input_name: obs_tensor})
+                # action = outputs[0].squeeze()
 
-                # obs_tensor = torch.from_numpy(obs_buf).unsqueeze(0)
-                # action = policy(obs_tensor).detach().numpy().squeeze()
+                obs_tensor = torch.from_numpy(obs_buf).unsqueeze(0)
+                action = policy(obs_tensor).detach().numpy().squeeze()
                 action = np.clip(action,-100,100)*0.25
                 
                 if counter / control_decimation <= 30.0:
