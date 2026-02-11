@@ -198,7 +198,7 @@ class ThsCfg( LeggedRobotCfg ):
         is_gaussian = True
         target_head_height = 1  # updated to match Piwaist head_height_target (base_height + 0.08)
         target_head_margin = 1
-        target_base_height_phase1 = 0.25  # updated to match Piwaist
+        target_base_height_phase1 = 0.45  # updated to match Piwaist
         target_base_height_phase2 = 0.45 #0.05 updated to 0.05 to get better standing style
         target_base_height_phase3 = 0.65  # updated to match Piwaist
         orientation_threshold = 0.99
@@ -209,11 +209,11 @@ class ThsCfg( LeggedRobotCfg ):
 
         reward_groups = ['task', 'regu', 'style', 'target']
         num_reward_groups = len(reward_groups)
-        reward_group_weights = [2.5, 0.1, 1, 1]
+        reward_group_weights = [2.5, 0.1, 1.5, 1]
 
         class scales:
             task_orientation = 1
-            task_orientation_y = -1
+            task_orientation_y = -10
             task_head_height = 1
 
     class constraints( LeggedRobotCfg.rewards ):
@@ -254,7 +254,7 @@ class ThsCfg( LeggedRobotCfg ):
             style_feet_distance = -10
             style_style_ang_vel_xy = 10
             style_soft_symmetry_action=-10  #  updated to get better standing style
-            style_soft_symmetry_body=2.5 # updated to get better standing style
+            style_soft_symmetry_body=10 # updated to get better standing style
 
             # post-task reward
             target_ang_vel_xy = 10
@@ -264,8 +264,8 @@ class ThsCfg( LeggedRobotCfg ):
             target_target_upper_dof_pos = 10
             target_target_orientation = 10
             target_target_base_height = 10
-            target_hip_roll_deviation = 0
-            target_target_knee_angle = 0 #  updated to get better standing style
+            target_hip_roll_deviation = -10
+            target_target_knee_angle = 10 #  updated to get better standing style
 
     class domain_rand:
         use_random = True
@@ -286,7 +286,7 @@ class ThsCfg( LeggedRobotCfg ):
         link_mass_range = [0.8, 1.2]
         
         randomize_friction = use_random
-        friction_range = [0.1, 1]
+        friction_range = [0.1, 1.2]
         
         randomize_restitution = use_random
         restitution_range = [0.0, 1.0]
@@ -301,7 +301,7 @@ class ThsCfg( LeggedRobotCfg ):
         initial_joint_pos_scale = [0.9, 1.1]
         initial_joint_pos_offset = [-0.15, 0.15]
         
-        push_robots = False
+        push_robots = True
         push_interval_s = 5
         max_push_vel_xy = 0.5
 

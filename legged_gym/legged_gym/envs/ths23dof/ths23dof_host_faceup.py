@@ -1220,8 +1220,8 @@ class LeggedRobot_Ths(BaseTask):
         feet_orientation = torch.mean(torch.concat([left_feet_orientation, right_feet_orientation], dim=-1), dim=-1)
 
         
-        base_height = self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
-        reward = tolerance(feet_orientation, [0.8, np.inf], 1, 0.1) * base_height#.unsqueeze(1) 
+        # base_height = self.root_states[:, 2] > self.cfg.rewards.target_base_height_phase1
+        reward = tolerance(feet_orientation, [0.8, np.inf], 1, 0.1) #.unsqueeze(1) 
 
         return reward
 

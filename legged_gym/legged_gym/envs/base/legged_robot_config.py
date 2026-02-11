@@ -2,7 +2,7 @@ from .base_config import BaseConfig
 
 class LeggedRobotCfg(BaseConfig):
     class env:
-        num_envs = 4
+        num_envs = 1024
         num_observations = 48
         num_privileged_obs = None # if not None a priviledge_obs_buf will be returned by step() (critic obs for assymetric training). None is returned otherwise 
         num_actions = 12
@@ -210,6 +210,6 @@ class LeggedRobotCfgPPO(BaseConfig):
         run_name = ''
         # load and resume
         resume = False
-        load_run = "转身起立"   # -1 = last run
-        checkpoint = "10100"
+        load_run = "faceup"   # -1 = last run
+        checkpoint = "3600"
         resume_path = None # updated from load_run and chkpt
